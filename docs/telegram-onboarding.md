@@ -4,7 +4,7 @@ This guide documents the current bundled Telegram notification setup path from
 Gajae-Code source. It is for the managed reference client used by
 `gjc notify setup`, not a separate remote-control product.
 
-For a Korean beginner guide with human-readable setup steps and minimal commands, start with [GJC Telegram 초보자 설치 가이드](./telegram-beginner-setup.md). This page remains the shorter implementation/onboarding reference.
+For a Korean beginner guide with screenshots, human-readable setup steps, and minimal commands, start with [GJC Telegram 초보자 설치 가이드](./telegram-beginner-setup.md). This page remains the shorter implementation/onboarding reference.
 
 ## What you are setting up
 

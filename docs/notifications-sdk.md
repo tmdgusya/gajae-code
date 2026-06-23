@@ -200,7 +200,7 @@ Slack socket-mode app — the contract above is all you implement.
 
 ## Telegram onboarding
 
-For the exact user setup flow (`gjc notify setup`, BotFather token, private-chat pairing, forum-enabled supergroup `chatId`, status, and troubleshooting), see [Telegram notification onboarding](./telegram-onboarding.md). For a Korean beginner walkthrough with human-readable setup steps and minimal commands, see [GJC Telegram 초보자 설치 가이드](./telegram-beginner-setup.md).
+For the exact user setup flow (`gjc notify setup`, BotFather token, private-chat pairing, forum-enabled supergroup `chatId`, status, and troubleshooting), see [Telegram notification onboarding](./telegram-onboarding.md). For a Korean beginner walkthrough with screenshots, human-readable setup steps, and minimal commands, see [GJC Telegram 초보자 설치 가이드](./telegram-beginner-setup.md).
 
 ## Managed Telegram daemon (bundled reference client)
 
