@@ -32,7 +32,7 @@
 
 The bundled Telegram flow adds a threaded per-session surface with context updates, live/finalized output, image attachments, inline buttons, free-text replies, typing indicators, and double-check acknowledgements. `gjc daemon` keeps one safe long-poll owner per bot token so new sessions attach cleanly instead of tripping Telegram 409 conflicts.
 
-For a beginner-friendly, screenshot-planned walkthrough of the Telegram setup, including BotFather, supergroup Topics, bot admin permissions, `-100...` chat ids, and daemon verification, see [`docs/telegram-beginner-setup.md`](docs/telegram-beginner-setup.md).
+For a Korean beginner walkthrough of Telegram setup, including BotFather, supergroup Topics, bot admin permissions, `-100...` chat ids, and daemon verification, see [`docs/telegram-beginner-setup.md`](docs/telegram-beginner-setup.md).
 
 ## Also new in 0.6.0
 
