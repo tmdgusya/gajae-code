@@ -4,6 +4,8 @@ This guide documents the current bundled Telegram notification setup path from
 Gajae-Code source. It is for the managed reference client used by
 `gjc notify setup`, not a separate remote-control product.
 
+For a step-by-step beginner guide with screenshot slots and copy-paste verification commands, start with [Telegram beginner setup guide](./telegram-beginner-setup.md). This page remains the shorter implementation/onboarding reference.
+
 ## What you are setting up
 
 Gajae-Code notifications are a loopback WebSocket SDK plus a managed Telegram
