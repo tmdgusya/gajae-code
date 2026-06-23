@@ -194,10 +194,14 @@ gjc notify setup --token '<BOTFATHER_TOKEN>' --group
 터미널에 이런 안내가 나온다.
 
 ```text
-Token validated. Send /start@gajae-r-bot in the forum-enabled Telegram group to pair notifications.
+Token validated. Send any message in the forum-enabled Telegram group to pair notifications. If the bot does not see your message, send /start@gajae-r-bot instead.
 ```
 
-이제 Telegram 그룹으로 돌아가서 아래 메시지를 보낸다. `gajae-r-bot` 부분은 자기 봇 username으로 바꾼다.
+이제 Telegram 그룹으로 돌아간다.
+
+보통은 **아무 메시지나 보내면** GJC가 잡는다. 봇이 그룹 관리자이기 때문이다.
+
+그래도 터미널이 계속 기다리면, 그룹에서 아래처럼 보낸다. `gajae-r-bot` 부분은 자기 봇 username으로 바꾼다.
 
 ```text
 /start@gajae-r-bot
@@ -269,9 +273,9 @@ GJC에게 답장할 때는:
 
 ### `gjc notify setup --group`이 계속 기다림
 
-대부분 그룹에 `/start@봇username`을 안 보낸 것이다.
+보통은 그룹에 아무 메시지나 보내면 잡힌다. 봇이 관리자이기 때문이다.
 
-Telegram 그룹에 이렇게 보낸다.
+그래도 안 되면 그룹에서 아래처럼 보낸다. `gajae-r-bot` 부분은 자기 봇 username으로 바꾼다.
 
 ```text
 /start@gajae-r-bot
@@ -309,7 +313,7 @@ BotFather에서 token을 재발급한다.
 [ ] 봇을 관리자로 만들었음
 [ ] 봇에게 Manage Topics / 토픽 관리 권한 줬음
 [ ] gjc notify setup --token ... --group 실행했음
-[ ] 그룹에서 /start@봇username 보냈음
+[ ] 그룹에 메시지를 보내서 GJC가 그룹을 잡았음
 [ ] gjc notify status에서 chatId가 -100...으로 보임
 [ ] gjc daemon status telegram이 running임
 [ ] Telegram 그룹에 GJC 세션 토픽이 생김

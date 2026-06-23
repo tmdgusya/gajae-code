@@ -129,7 +129,7 @@ describe("notify setup cli", () => {
 		}
 	});
 
-	test("group setup mode accepts a supergroup message", async () => {
+	test("group setup mode accepts any supergroup message and prints fallback hint", async () => {
 		const settings = Settings.isolated();
 		const { fetchImpl } = makeFetch({
 			getMe: [{ ok: true, result: { id: 1, username: "gajae_bot" } }],
@@ -140,7 +140,10 @@ describe("notify setup cli", () => {
 					result: [
 						{
 							update_id: 10,
-							message: { chat: { id: -1001234567890, type: "supergroup", title: "gajae", is_forum: true } },
+							message: {
+								text: "안녕",
+								chat: { id: -1001234567890, type: "supergroup", title: "gajae", is_forum: true },
+							},
 						},
 					],
 				},
@@ -165,6 +168,7 @@ describe("notify setup cli", () => {
 		expect(cfg.enabled).toBe(true);
 		expect(cfg.botToken).toBe(token);
 		expect(cfg.chatId).toBe("-1001234567890");
+		expect(stdout).toContain("Send any message");
 		expect(stdout).toContain("/start@gajae_bot");
 		expect(stdout).toContain(maskToken(token));
 		expect(stdout).not.toContain(token);

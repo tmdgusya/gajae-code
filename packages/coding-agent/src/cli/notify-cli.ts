@@ -147,9 +147,9 @@ async function runSetup(deps: NotifyCommandDeps): Promise<void> {
 		const stale = await getUpdates(fetchImpl, apiBase, token, { timeout: 0, allowed_updates: ["message"] });
 		const offset = nextOffset(stale);
 		if (groupMode) {
-			const command = me.username ? `/start@${me.username}` : "/start@<bot username>";
+			const username = me.username ?? "<bot username>";
 			process.stdout.write(
-				`Token validated. Send ${command} in the forum-enabled Telegram group to pair notifications.\n`,
+				`Token validated. Send any message in the forum-enabled Telegram group to pair notifications. If the bot does not see your message, send /start@${username} instead.\n`,
 			);
 			chatId = await waitForGroupChat(fetchImpl, apiBase, token, {
 				offset,
@@ -280,7 +280,7 @@ async function waitForGroupChat(
 
 	if (sawRejectedChatType) {
 		throw new Error(
-			`Group pairing rejected ${sawRejectedChatType} chat; send /start in the forum-enabled Telegram group.`,
+			`Group pairing rejected ${sawRejectedChatType} chat; send a message in the forum-enabled Telegram group.`,
 		);
 	}
 	throw new Error("Timed out waiting for a Telegram group message to pair notifications.");
