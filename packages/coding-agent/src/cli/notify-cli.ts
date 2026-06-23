@@ -18,6 +18,7 @@ export interface NotifyCommandArgs {
 	token?: string;
 	chatId?: string;
 	redact?: boolean;
+	group?: boolean;
 }
 
 export interface NotifyCommandDeps {
@@ -29,6 +30,7 @@ export interface NotifyCommandDeps {
 	pollIntervalMs?: number;
 	setupChatId?: string;
 	setupRedact?: boolean;
+	setupGroup?: boolean;
 }
 
 interface TelegramApiResponse<T> {
@@ -40,11 +42,22 @@ interface TelegramApiResponse<T> {
 interface TelegramUpdate {
 	update_id: number;
 	message?: {
+		text?: string;
 		chat?: {
 			id?: number | string;
 			type?: string;
+			title?: string;
+			username?: string;
+			is_forum?: boolean;
 		};
 	};
+}
+
+interface TelegramBotMe {
+	id: number;
+	is_bot?: boolean;
+	username?: string;
+	first_name?: string;
 }
 
 const DEFAULT_API_BASE = "https://api.telegram.org";
@@ -69,6 +82,7 @@ export function parseNotifyArgs(args: string[]): NotifyCommandArgs | undefined {
 			token: flag("--token"),
 			chatId: flag("--chat-id"),
 			redact: rest.includes("--redact"),
+			group: rest.includes("--group"),
 		};
 	}
 	if (action === "daemon-internal") {
@@ -90,6 +104,7 @@ export async function runNotifyCommand(cmd: NotifyCommandArgs, deps: NotifyComma
 				setupToken: deps.setupToken ?? cmd.token,
 				setupChatId: deps.setupChatId ?? cmd.chatId,
 				setupRedact: deps.setupRedact ?? cmd.redact,
+				setupGroup: deps.setupGroup ?? cmd.group,
 			});
 			return;
 		case "status":
@@ -120,23 +135,37 @@ async function runSetup(deps: NotifyCommandDeps): Promise<void> {
 		throw new Error("Telegram bot token is required.");
 	}
 
-	await callTelegram(fetchImpl, apiBase, token, "getMe", {});
-	process.stdout.write(
-		"Token validated. Message your bot now from the private Telegram chat to pair notifications.\n",
-	);
+	const me = await callTelegram<TelegramBotMe>(fetchImpl, apiBase, token, "getMe", {});
+	const groupMode = deps.setupGroup ?? false;
 
 	let chatId: string;
 	if (deps.setupChatId?.trim()) {
 		chatId = deps.setupChatId.trim();
+		process.stdout.write("Token validated.\n");
 		process.stdout.write(`Using provided chat id ${chatId} (non-interactive).\n`);
 	} else {
 		const stale = await getUpdates(fetchImpl, apiBase, token, { timeout: 0, allowed_updates: ["message"] });
 		const offset = nextOffset(stale);
-		chatId = await waitForPrivateChat(fetchImpl, apiBase, token, {
-			offset,
-			pollTimeoutMs: deps.pollTimeoutMs ?? DEFAULT_POLL_TIMEOUT_MS,
-			pollIntervalMs: deps.pollIntervalMs ?? DEFAULT_POLL_INTERVAL_MS,
-		});
+		if (groupMode) {
+			const command = me.username ? `/start@${me.username}` : "/start@<bot username>";
+			process.stdout.write(
+				`Token validated. Send ${command} in the forum-enabled Telegram group to pair notifications.\n`,
+			);
+			chatId = await waitForGroupChat(fetchImpl, apiBase, token, {
+				offset,
+				pollTimeoutMs: deps.pollTimeoutMs ?? DEFAULT_POLL_TIMEOUT_MS,
+				pollIntervalMs: deps.pollIntervalMs ?? DEFAULT_POLL_INTERVAL_MS,
+			});
+		} else {
+			process.stdout.write(
+				"Token validated. Message your bot now from the private Telegram chat to pair notifications.\n",
+			);
+			chatId = await waitForPrivateChat(fetchImpl, apiBase, token, {
+				offset,
+				pollTimeoutMs: deps.pollTimeoutMs ?? DEFAULT_POLL_TIMEOUT_MS,
+				pollIntervalMs: deps.pollIntervalMs ?? DEFAULT_POLL_INTERVAL_MS,
+			});
+		}
 	}
 
 	settings.set("notifications.telegram.botToken", token);
@@ -211,6 +240,52 @@ async function waitForPrivateChat(
 	throw new Error("Timed out waiting for a private Telegram message to pair notifications.");
 }
 
+async function waitForGroupChat(
+	fetchImpl: typeof fetch,
+	apiBase: string,
+	token: string,
+	opts: { offset: number | undefined; pollTimeoutMs: number; pollIntervalMs: number },
+): Promise<string> {
+	const deadline = Date.now() + opts.pollTimeoutMs;
+	let offset = opts.offset;
+	let sawRejectedChatType: string | undefined;
+
+	while (Date.now() <= deadline) {
+		const updates = await getUpdates(fetchImpl, apiBase, token, { offset, timeout: 0, allowed_updates: ["message"] });
+		offset = nextOffset(updates, offset);
+		for (const update of updates) {
+			const chat = update.message?.chat;
+			if (!chat) continue;
+			if (chat.type === "supergroup" && chat.id !== undefined) {
+				return String(chat.id);
+			}
+			if (chat.type === "group") {
+				sawRejectedChatType = chat.type;
+				process.stderr.write("Rejected group chat. Enable Topics so Telegram converts it to a supergroup.\n");
+				continue;
+			}
+			if (chat.type) {
+				sawRejectedChatType = chat.type;
+				process.stderr.write(
+					`Rejected ${chat.type} chat. Group pairing requires a forum-enabled Telegram group.\n`,
+				);
+			}
+		}
+		if (opts.pollIntervalMs > 0) {
+			await new Promise(resolve =>
+				setTimeout(resolve, Math.min(opts.pollIntervalMs, Math.max(0, deadline - Date.now()))),
+			);
+		}
+	}
+
+	if (sawRejectedChatType) {
+		throw new Error(
+			`Group pairing rejected ${sawRejectedChatType} chat; send /start in the forum-enabled Telegram group.`,
+		);
+	}
+	throw new Error("Timed out waiting for a Telegram group message to pair notifications.");
+}
+
 function nextOffset(updates: TelegramUpdate[], fallback?: number): number | undefined {
 	let max = fallback === undefined ? undefined : fallback - 1;
 	for (const update of updates) {
@@ -259,15 +334,17 @@ export function printNotifyHelp(): void {
 
 ${chalk.bold("Usage:")}
   ${APP_NAME} notify setup
+  ${APP_NAME} notify setup --group
   ${APP_NAME} notify setup --token <botToken> --chat-id <chatId> [--redact]
   ${APP_NAME} notify status
 
 ${chalk.bold("Subcommands:")}
-  setup     Pair a Telegram bot token with a private chat
+  setup     Pair a Telegram bot token with a private chat, or with a group using --group
   status    Show notification configuration without secrets
 
 ${chalk.bold("Examples:")}
   ${APP_NAME} notify setup
+  ${APP_NAME} notify setup --group
   ${APP_NAME} notify setup --token <botToken> --chat-id <chatId> [--redact]
   ${APP_NAME} notify status
 `);

@@ -55,11 +55,20 @@ describe("notify setup cli", () => {
 			token: undefined,
 			chatId: undefined,
 			redact: false,
+			group: false,
 		});
 		expect(parseNotifyArgs(["notify", "daemon-internal", "--smoke"])).toEqual({
 			action: "daemon-internal",
 			smoke: true,
 			rawArgs: ["--smoke"],
+		});
+		expect(parseNotifyArgs(["notify", "setup", "--group"])).toEqual({
+			action: "setup",
+			rawArgs: ["--group"],
+			token: undefined,
+			chatId: undefined,
+			redact: false,
+			group: true,
 		});
 	});
 
@@ -118,6 +127,47 @@ describe("notify setup cli", () => {
 			expect(getNotificationConfig(settings).botToken).toBeUndefined();
 			expect(getNotificationConfig(settings).chatId).toBeUndefined();
 		}
+	});
+
+	test("group setup mode accepts a supergroup message", async () => {
+		const settings = Settings.isolated();
+		const { fetchImpl } = makeFetch({
+			getMe: [{ ok: true, result: { id: 1, username: "gajae_bot" } }],
+			getUpdates: [
+				{ ok: true, result: [] },
+				{
+					ok: true,
+					result: [
+						{
+							update_id: 10,
+							message: { chat: { id: -1001234567890, type: "supergroup", title: "gajae", is_forum: true } },
+						},
+					],
+				},
+			],
+		});
+
+		const { stdout } = await captureOutput(() =>
+			runNotifyCommand(
+				{ action: "setup", rawArgs: [], group: true },
+				{
+					fetchImpl,
+					apiBase: "https://fake.invalid",
+					settings,
+					setupToken: token,
+					pollTimeoutMs: 50,
+					pollIntervalMs: 0,
+				},
+			),
+		);
+
+		const cfg = getNotificationConfig(settings);
+		expect(cfg.enabled).toBe(true);
+		expect(cfg.botToken).toBe(token);
+		expect(cfg.chatId).toBe("-1001234567890");
+		expect(stdout).toContain("/start@gajae_bot");
+		expect(stdout).toContain(maskToken(token));
+		expect(stdout).not.toContain(token);
 	});
 
 	test("stale pre-existing updates are skipped by advancing offset", async () => {

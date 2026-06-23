@@ -28,6 +28,7 @@ export default class Notify extends Command {
 		token: Flags.string({ description: "Telegram bot token (non-interactive setup)" }),
 		"chat-id": Flags.string({ description: "Telegram chat id to pair (non-interactive setup)" }),
 		redact: Flags.boolean({ description: "Enable redaction of remote notification content" }),
+		group: Flags.boolean({ description: "Pair by waiting for a Telegram group message" }),
 		"owner-id": Flags.string({ description: "Internal: daemon owner id" }),
 		"agent-dir": Flags.string({ description: "Internal: agent dir for the daemon" }),
 	};
@@ -53,6 +54,7 @@ export default class Notify extends Command {
 			token: flags.token as string | undefined,
 			chatId: (flags as Record<string, unknown>)["chat-id"] as string | undefined,
 			redact: Boolean(flags.redact),
+			group: Boolean(flags.group),
 		};
 
 		await initTheme();

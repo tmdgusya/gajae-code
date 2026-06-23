@@ -4,7 +4,7 @@ This guide documents the current bundled Telegram notification setup path from
 Gajae-Code source. It is for the managed reference client used by
 `gjc notify setup`, not a separate remote-control product.
 
-For a Korean beginner guide with screenshots, human-readable setup steps, and minimal commands, start with [GJC Telegram 초보자 설치 가이드](./telegram-beginner-setup.md). This page remains the shorter implementation/onboarding reference.
+For a Korean beginner guide with screenshots, automatic `gjc notify setup --group` pairing, human-readable setup steps, and minimal commands, start with [GJC Telegram 초보자 설치 가이드](./telegram-beginner-setup.md). This page remains the shorter implementation/onboarding reference.
 
 ## What you are setting up
 
@@ -35,43 +35,47 @@ username ending in `bot`, then copy the token BotFather returns. Treat the token
 like a password: do not paste it into logs, screenshots, issues, or shell history
 that other people can read.
 
-## 2. Run the interactive setup wizard
+## 2. Run setup
 
-From any terminal where `gjc` is installed:
+Current implementation path: `packages/coding-agent/src/cli/notify-cli.ts`.
+
+For the managed Telegram daemon's per-session remote delivery path, use a
+forum-enabled supergroup and the group pairing mode:
+
+```sh
+gjc notify setup --group
+```
+
+The group setup flow does this:
+
+1. prompts for `Telegram BotFather token:` unless `--token` is passed;
+2. validates the token with Telegram `getMe`;
+3. asks you to send `/start@<bot username>` in the forum-enabled Telegram group;
+4. polls Telegram `getUpdates` until it sees a `supergroup` message;
+5. writes that group chat id and enables notifications.
+
+The default setup flow remains available for private-chat discovery/status checks:
 
 ```sh
 gjc notify setup
 ```
 
-Current implementation path: `packages/coding-agent/src/cli/notify-cli.ts`.
+Default setup waits for a private Telegram DM and rejects `group`,
+`supergroup`, and `channel` updates so a group does not receive configuration
+metadata by accident. Use `--group` when you intentionally want session delivery
+through a trusted forum-enabled supergroup.
 
-The wizard does this:
-
-1. prompts for `Telegram BotFather token:`;
-2. validates the token with Telegram `getMe`;
-3. asks you to message the bot from a private Telegram chat;
-4. polls Telegram `getUpdates` until it sees a private chat message;
-5. writes the paired chat id and enables notifications.
-
-The setup pairing flow is private-chat only. If setup sees a `group`,
-`supergroup`, or `channel`, it rejects that chat and keeps waiting for a private
-DM. This is intentional for safe local discovery: group chats must not receive
-session names, action ids, or pending status by accident.
-
-Current limitation: the managed daemon's per-session remote delivery path uses
-Telegram forum topics (`createForumTopic` + `message_thread_id`). Private chats
-do not support forum topics, so the private-chat id discovered by setup is
-sufficient for configuration discovery/status but is not enough for end-to-end
-threaded delivery. Until setup grows a forum-chat onboarding path, operators who
-want Telegram delivery must configure `notifications.telegram.chatId` to a
-trusted forum-enabled supergroup that the bot can manage. If topic creation
-fails, the daemon drops remote sends fail-closed rather than flattening session
-traffic into a shared chat.
+The managed daemon uses Telegram forum topics (`createForumTopic` +
+`message_thread_id`) for per-session routing. Private chats do not support forum
+topics, so end-to-end threaded delivery requires `notifications.telegram.chatId`
+to point at a trusted forum-enabled supergroup that the bot can manage. If topic
+creation fails, the daemon drops remote sends fail-closed rather than flattening
+session traffic into a shared chat.
 
 After setup succeeds, it prints a masked token and the paired chat id:
 
 ```text
-Notifications enabled. botToken=1234…(len N) chatId=123456789
+Notifications enabled. botToken=1234…(len N) chatId=-1001234567890
 ```
 
 The raw token is never printed by GJC status/setup output after it is stored.
@@ -85,6 +89,12 @@ accepted:
 
 ```sh
 gjc notify setup --token <botToken> --chat-id <chatId>
+```
+
+For interactive group discovery without manually looking up the chat id:
+
+```sh
+gjc notify setup --token <botToken> --group
 ```
 
 Optional redaction can be enabled during setup:
@@ -158,10 +168,10 @@ starting a second poller. This avoids Telegram `409 Conflict` failures.
 ## 7. Use the Telegram chat
 
 The current managed daemon uses Telegram forum-topic delivery for per-session
-routing. Pairing still discovers a private chat id for the local setup path, but
-threaded per-session delivery requires `notifications.telegram.chatId` to point
-at a trusted forum-enabled supergroup where the bot can call
+routing. Threaded per-session delivery requires `notifications.telegram.chatId`
+to point at a trusted forum-enabled supergroup where the bot can call
 `createForumTopic`/`editForumTopic` and send messages with `message_thread_id`.
+Use `gjc notify setup --group` to pair that group automatically.
 If Telegram refuses topic creation, the daemon drops remote sends fail-closed
 instead of falling back to a flat shared chat.
 
@@ -222,16 +232,16 @@ or regenerate it in the official BotFather UI.
 
 ### Setup times out waiting for a private chat
 
-Send any message directly to the bot from your Telegram user account. Do not add
-it to a group for pairing; groups/supergroups/channels are intentionally rejected
-by the current setup flow.
+Default `gjc notify setup` waits for a private DM. Send any message directly to
+the bot from your Telegram user account. For forum group delivery, use
+`gjc notify setup --group` instead and send `/start@<bot username>` in the
+Telegram group.
 
 ### Setup succeeds but no Telegram session messages arrive
 
 Check whether `notifications.telegram.chatId` points at a forum-enabled
-supergroup where the bot can manage topics. The setup-discovered private chat id
-is not sufficient for current per-session threaded delivery because private chats
-do not support `createForumTopic`/`message_thread_id`.
+supergroup where the bot can manage topics. The easiest fix is to rerun
+`gjc notify setup --group` and send `/start@<bot username>` in that group.
 
 ### Telegram 409 conflict
 

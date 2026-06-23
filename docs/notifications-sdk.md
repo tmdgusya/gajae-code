@@ -200,7 +200,7 @@ Slack socket-mode app — the contract above is all you implement.
 
 ## Telegram onboarding
 
-For the exact user setup flow (`gjc notify setup`, BotFather token, private-chat pairing, forum-enabled supergroup `chatId`, status, and troubleshooting), see [Telegram notification onboarding](./telegram-onboarding.md). For a Korean beginner walkthrough with screenshots, human-readable setup steps, and minimal commands, see [GJC Telegram 초보자 설치 가이드](./telegram-beginner-setup.md).
+For the exact user setup flow (`gjc notify setup`, BotFather token, optional private-chat pairing, automatic forum-enabled supergroup pairing with `--group`, status, and troubleshooting), see [Telegram notification onboarding](./telegram-onboarding.md). For a Korean beginner walkthrough with screenshots, automatic `gjc notify setup --group` pairing, human-readable setup steps, and minimal commands, see [GJC Telegram 초보자 설치 가이드](./telegram-beginner-setup.md).
 
 ## Managed Telegram daemon (bundled reference client)
 
@@ -211,15 +211,15 @@ matching endpoint.
 
 ### Setup and auto-connect
 
-Run the setup command once:
+For forum-topic session delivery, run the group setup command once:
 
 ```sh
-gjc notify setup
+gjc notify setup --group
 ```
 
-The wizard validates the bot token with Telegram, waits for a private DM to the
-bot, and writes canonical global Settings under `config.yml` in the GJC agent
-directory. It enables:
+The wizard validates the bot token with Telegram, waits for `/start@<bot username>`
+in a forum-enabled supergroup, and writes canonical global Settings under
+`config.yml` in the GJC agent directory. It enables:
 
 - `notifications.enabled`
 - `notifications.telegram.botToken`
@@ -240,10 +240,11 @@ conflicts.
 
 The trust model is intentionally strict:
 
-- setup pairs exactly one private Telegram chat;
+- default setup pairs exactly one private Telegram chat;
+- `gjc notify setup --group` pairs exactly one intentional forum-enabled supergroup;
 - runtime accepts updates only from that paired chat id;
-- groups, supergroups, channels, and unpaired users never receive session names,
-  action ids, pending status, or configuration hints;
+- unpaired users/chats never receive session names, action ids, pending status, or
+  configuration hints;
 - daemon state stores a token fingerprint, not the raw bot token.
 
 ### Routing in shared chats
