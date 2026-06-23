@@ -137,7 +137,7 @@ Topics가 안 보이면 먼저 이것부터 확인한다.
 예시:
 
 ```text
-@gajae-r-bot
+@자신-봇-이름
 ```
 
 3. 봇을 그룹에 추가한다.
@@ -151,7 +151,7 @@ Topics가 안 보이면 먼저 이것부터 확인한다.
 그래도 안 되면 브라우저에서 아래 주소를 연다. username은 자기 봇 username으로 바꾼다.
 
 ```text
-https://t.me/gajae-r-bot?startgroup=true
+https://t.me/자신-봇-이름?startgroup=true
 ```
 
 ## 6. 봇을 관리자로 만들고 Topics 권한 주기
@@ -194,17 +194,17 @@ gjc notify setup --token '<BOTFATHER_TOKEN>' --group
 터미널에 이런 안내가 나온다.
 
 ```text
-Token validated. Send any message in the forum-enabled Telegram group to pair notifications. If the bot does not see your message, send /start@gajae-r-bot instead.
+Token validated. Send any message in the forum-enabled Telegram group to pair notifications. If the bot does not see your message, send /start@자신-봇-이름 instead.
 ```
 
 이제 Telegram 그룹으로 돌아간다.
 
 보통은 **아무 메시지나 보내면** GJC가 잡는다. 봇이 그룹 관리자이기 때문이다.
 
-그래도 터미널이 계속 기다리면, 그룹에서 아래처럼 보낸다. `gajae-r-bot` 부분은 자기 봇 username으로 바꾼다.
+그래도 터미널이 계속 기다리면, 그룹에서 아래처럼 보낸다. `자신-봇-이름` 부분은 자기 봇 username으로 바꾼다.
 
 ```text
-/start@gajae-r-bot
+/start@자신-봇-이름
 ```
 
 GJC가 그룹 메시지를 받으면 자동으로 그룹 id를 저장한다.
@@ -275,10 +275,10 @@ GJC에게 답장할 때는:
 
 보통은 그룹에 아무 메시지나 보내면 잡힌다. 봇이 관리자이기 때문이다.
 
-그래도 안 되면 그룹에서 아래처럼 보낸다. `gajae-r-bot` 부분은 자기 봇 username으로 바꾼다.
+그래도 안 되면 그룹에서 아래처럼 보낸다. `자신-봇-이름` 부분은 자기 봇 username으로 바꾼다.
 
 ```text
-/start@gajae-r-bot
+/start@자신-봇-이름
 ```
 
 ### `Rejected group chat`이 나옴
